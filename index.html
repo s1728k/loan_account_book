@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Loan Account Book</title>
+  <base href="/">
+  <meta charset="utf-8" />
+  <meta content='description' name='loan account book.' />
+  <meta content='keywords' name='loan account book' />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-route.js"></script>
+  <script src="http://momentjs.com/downloads/moment.min.js"></script>
+<!--   <link rel="stylesheet"  href="css/custom.css"> -->
+<style>
+
+</style>
+</head>
+<body ng-app="myApp">
+  
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span> 
+      </button>
+      <a class="navbar-brand" href="#!emi_calc">Loan Account Book</a>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav navbar-right">
+        <li class="nav-link active" onclick="nav_active(0)"><a href="#!emi_calc">EMI Calculator</a></li>
+        <!-- <li><a href="#!blog">Blog</a></li> -->
+        <li class="nav-link" onclick="nav_active(1)"><a href="#!amortization_book">Amortization Book</a></li>
+        <li class="nav-link" onclick="nav_active(2)"><a href="#!login">Login</a></li>
+        <li class="nav-link" onclick="nav_active(3)" ng-class="active"><a href="#!signup">Signup</a></li>
+      </ul>
+    </div>
+</div>
+</nav>
+
+<div class="ng-view"></div>
+
+<script>
+var app = angular.module("myApp", ["ngRoute"]);
+app.config(function($routeProvider) {
+    $routeProvider
+    .when("/", {
+        templateUrl : "main.html"
+    })
+    .when("/emi_calc", {
+        templateUrl : "main.html"
+    })
+    .when("/amortization_book", {
+        templateUrl : "amortization.html"
+    })
+    .when("/new_amortization_book", {
+        templateUrl : "new_amortization_book.html"
+    })
+    .when("/login", {
+        templateUrl : "login.html"
+    })
+    .when("/signup", {
+        templateUrl : "signup.html"
+    })
+    .when("/password_reset_request", {
+        templateUrl : "reset_password_request.html"
+    })
+    .when("/reset_password", {
+        templateUrl : "reset_password.html"
+    });
+});
+app.run(function($rootScope) {
+    $rootScope.signup_submit = 'https://localhost:8003/api/14/users/register';
+});
+app.controller('emi_calc', function($scope) {
+    $scope.p = 1000000;$scope.r = 10;$scope.t = 120;$scope.e=13215.07;$scope.tu="Months";$scope.m=1;
+    $scope.ngOnInit = function(){
+
+    }
+    $scope.emi_calc = function() {
+        $scope.e = $scope.p*($scope.r/12/100)*Math.pow((1+($scope.r/12/100)), $scope.t*$scope.m) /(Math.pow((1+($scope.r/12/100)), $scope.t*$scope.m)-1);
+    };
+    $scope.tu_ch = function () {
+      if($scope.tu=="Months"){
+        $scope.m=1;
+        $scope.emi_calc();
+      }else{
+        $scope.m=12;
+        $scope.emi_calc();
+      }
+    }
+});
+app.controller('amort_ctrl', function($scope) {
+    $scope.p = 1000000;$scope.r = 10;$scope.t = 120;$scope.e=13215.07;
+    $scope.arr = [];$scope.b = 0;$scope.pp = 0;$scope.pt = 0;$scope.pf = 0;$scope.ip = 0;$scope.lf = 0;
+    $scope.dd = "21-01-2018";$scope.cd = "10-02-2018";$scope.md = "10-02-2030";
+    $scope.ngOnInit = function(){
+      nav_active(1);
+      $scope.amort_calc();
+    }
+    $scope.amort_calc = function() {
+      var i=0; var bb=$scope.p; var pp=0; var lf=0;
+      while(i!=$scope.t){
+        $scope.arr.push({});
+        $scope.arr[i]['bb'] = $scope.arr.length==1?bb:$scope.arr[i-1]['eb'];
+        $scope.arr[i]['e'] = $scope.e;
+        $scope.arr[i]['r'] = $scope.r;
+        $scope.arr[i]['i'] = $scope.r/100/12*$scope.arr[i]['bb'];
+        $scope.arr[i]['p'] = $scope.e - $scope.arr[i]['i'];
+        
+        $scope.arr[i]['pp'] = pp;
+        $scope.arr[i]['lf'] = lf;
+        $scope.arr[i]['eb'] = $scope.arr[i]['bb'] - $scope.arr[i]['pp'] - $scope.arr[i]['p'];
+        i++;
+      }
+    };
+});
+app.controller('new_amort_ctrl', function($scope) {
+    $scope.p = 1000000;$scope.r = 10;$scope.t = 120;$scope.e=13215.07;$scope.arr = [];
+    $scope.stl = function () {
+      nav_active(1);
+      $scope.amort_calc();
+    }
+});
+app.controller('login_ctrl', function($scope, $http) {
+    $scope.p = 1000000;$scope.r = 10;$scope.t = 120;$scope.e=13215.07;$scope.arr = [];
+    $scope.stl = function () {
+      nav_active(2);
+      $scope.amort_calc();
+    }
+    $scope.login_res = "";
+    $scope.login = function(){
+      $http.post("welcome.htm")
+      .then(function(response) {
+          $scope.login_res = response.data;
+      }, function(response) {
+          $scope.content = "Something went wrong";
+      });
+    }
+});
+app.controller('signup_ctrl', function($scope) {
+    $scope.p = 1000000;$scope.r = 10;$scope.t = 120;$scope.e=13215.07;$scope.arr = [];
+    $scope.ngOnInit = function () {
+      nav_active(3);
+    };
+    $scope.submit = function () {
+      var postBody = {"_token":"$2y$10$4igClFnBSWKvYfkbBODt0ez/Sepe5wHBYePSmha4u4l9gmLnlecAO"};
+      postBody["name"] = "fd";
+      postBody["email"] = "fd@gmail.com";
+      postBody["password"] = "fdsf1@1";
+      $.post('http://localhost:8003/api/14/users/register', postBody, function(data, status){
+        console.log(status);
+        console.log(data);
+      });
+    };
+});
+</script>
+
+<Script>
+  function nav_active(i){
+    j=0;
+    $("ul.nav li").each(function(){
+      $(this).removeClass("active");
+      if(i==j){
+        $(this).addClass("active");
+      }
+      j++;
+    });
+  }
+</Script>
+</body>
+</html>
